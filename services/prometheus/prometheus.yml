@@ -1,61 +1,32 @@
-version: '3.8'
+global:
+  scrape_interval: 15s  # How often to scrape metrics
+  evaluation_interval: 15s  # How often to evaluate rules
 
-services:
-  # Existing services (postgres, mongodb, qdrant, etc.) remain unchanged...
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
 
-  # MongoDB Exporter
-  mongodb_exporter:
-    image: percona/mongodb_exporter:latest
-    container_name: ${PROJECT_NAME}-mongodb-exporter
-    environment:
-      MONGODB_URI: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017"
-    ports:
-      - "9216:9216"
-    depends_on:
-      - mongodb
-    networks:
-      - ${PROJECT_NAME}-network
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
 
-  # Kafka Exporter
-  kafka_exporter:
-    image: danielqsj/kafka-exporter:latest
-    container_name: ${PROJECT_NAME}-kafka-exporter
-    environment:
-      KAFKA_BROKERS: "kafka:9092"
-    ports:
-      - "7071:7071"
-    depends_on:
-      - kafka
-    networks:
-      - ${PROJECT_NAME}-network
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:9187']  # PostgreSQL exporter port
 
-  # Redis Exporter
-  redis_exporter:
-    image: oliver006/redis_exporter:latest
-    container_name: ${PROJECT_NAME}-redis-exporter
-    environment:
-      REDIS_ADDR: "redis://redis:6379"
-    ports:
-      - "9121:9121"
-    depends_on:
-      - redis
-    networks:
-      - ${PROJECT_NAME}-network
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:9216']  # MongoDB exporter port
 
-  # Neo4j Exporter (using Neo4j's built-in Prometheus plugin)
-  neo4j:
-    image: neo4j:latest
-    container_name: ${PROJECT_NAME}-neo4j
-    environment:
-      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
-      NEO4J_PLUGINS: '["apoc", "prometheus"]'  # Enable Prometheus plugin
-    volumes:
-      - neo4j-data:/data
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-      - "2004:2004"  # Prometheus metrics endpoint
-    networks:
-      - ${PROJECT_NAME}-network
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:9121']  # Redis exporter port
 
-  # Prometheus and Grafana remain unchanged...
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:7071']  # Kafka exporter port
+
+  - job_name: 'neo4j'
+    static_configs:
+      - targets: ['neo4j:2004']  # Neo4j exporter port

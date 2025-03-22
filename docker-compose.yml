@@ -1,11 +1,150 @@
 version: '3.8'
 
 services:
-  # Existing services (postgres, mongodb, qdrant, etc.) remain unchanged...
+  postgres:
+    image: postgres:latest
+    container_name: ${PROJECT_NAME}-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ${PROJECT_NAME}-network
 
-  # MongoDB Exporter
+  mongodb:
+    image: mongo:latest
+    container_name: ${PROJECT_NAME}-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ${PROJECT_NAME}-qdrant
+    environment:
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  neo4j:
+    image: neo4j:latest
+    container_name: ${PROJECT_NAME}-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc", "prometheus"]'
+    volumes:
+      - neo4j-data:/data
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+      - "2004:2004"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  redis:
+    image: redis:latest
+    container_name: ${PROJECT_NAME}-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: ${PROJECT_NAME}-zookeeper
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/bitnami/zookeeper
+    networks:
+      - ${PROJECT_NAME}-network
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: ${PROJECT_NAME}-kafka
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - ${PROJECT_NAME}-network
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ${PROJECT_NAME}-openwebui
+    environment:
+      OPENWEBUI_MODEL: ${OPENWEBUI_MODEL}
+      OPENWEBUI_PORT: ${OPENWEBUI_PORT}
+    volumes:
+      - openwebui-data:/app/backend/data
+    ports:
+      - "${OPENWEBUI_PORT}:8080"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  python:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ${PROJECT_NAME}-python
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8888:8888"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ${PROJECT_NAME}-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - ${PROJECT_NAME}-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${PROJECT_NAME}-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - ${PROJECT_NAME}-network
+
   mongodb_exporter:
-    image: percona/mongodb_exporter:latest
+    image: percona/mongodb_exporter:0.39.0
     container_name: ${PROJECT_NAME}-mongodb-exporter
     environment:
       MONGODB_URI: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017"
@@ -16,9 +155,8 @@ services:
     networks:
       - ${PROJECT_NAME}-network
 
-  # Kafka Exporter
   kafka_exporter:
-    image: danielqsj/kafka-exporter:latest
+    image: danielqsj/kafka-exporter:v1.4.2
     container_name: ${PROJECT_NAME}-kafka-exporter
     environment:
       KAFKA_BROKERS: "kafka:9092"
@@ -29,9 +167,8 @@ services:
     networks:
       - ${PROJECT_NAME}-network
 
-  # Redis Exporter
   redis_exporter:
-    image: oliver006/redis_exporter:latest
+    image: oliver006/redis_exporter:v1.45.0
     container_name: ${PROJECT_NAME}-redis-exporter
     environment:
       REDIS_ADDR: "redis://redis:6379"
@@ -42,20 +179,18 @@ services:
     networks:
       - ${PROJECT_NAME}-network
 
-  # Neo4j Exporter (using Neo4j's built-in Prometheus plugin)
-  neo4j:
-    image: neo4j:latest
-    container_name: ${PROJECT_NAME}-neo4j
-    environment:
-      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
-      NEO4J_PLUGINS: '["apoc", "prometheus"]'  # Enable Prometheus plugin
-    volumes:
-      - neo4j-data:/data
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-      - "2004:2004"  # Prometheus metrics endpoint
-    networks:
-      - ${PROJECT_NAME}-network
+volumes:
+  postgres-data:
+  mongodb-data:
+  qdrant-data:
+  neo4j-data:
+  redis-data:
+  zookeeper-data:
+  kafka-data:
+  openwebui-data:
+  prometheus-data:
+  grafana-data:
 
-  # Prometheus and Grafana remain unchanged...
+networks:
+  ai_project1-network:
+    name: ai_project1-network
