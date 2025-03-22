@@ -15,6 +15,7 @@ fi
 if grep -q "PROJECT_NAME=" .env; then
   sed -i "s/^PROJECT_NAME=.*/PROJECT_NAME=$PROJECT_NAME/" .env
 else
+
   echo "PROJECT_NAME=$PROJECT_NAME" >> .env
 fi
 

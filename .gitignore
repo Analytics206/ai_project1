@@ -5,9 +5,12 @@ __pycache__/
 *.pyd
 .venv/
 venv/
+myenv/
+.myenv/
 
 # Environment
 .env
+.myenv
 
 # Data
 data/
