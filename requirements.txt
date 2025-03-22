@@ -1,0 +1,9 @@
+torch
+transformers
+langchain
+pandas
+numpy
+scikit-learn
+jupyter
+black
+flake8

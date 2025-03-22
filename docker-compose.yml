@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: ${PROJECT_NAME}-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: ${PROJECT_NAME}-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ${PROJECT_NAME}-qdrant
+    environment:
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  neo4j:
+    image: neo4j:latest
+    container_name: ${PROJECT_NAME}-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+    volumes:
+      - neo4j-data:/data
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  redis:
+    image: redis:latest
+    container_name: ${PROJECT_NAME}-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: ${PROJECT_NAME}-kafka
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: "controller,broker"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CFG_CONTROLLER_LISTENERS: "CONTROLLER://:9093"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - ${PROJECT_NAME}-network
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main  # Use the non-GPU image
+    container_name: ${PROJECT_NAME}-openwebui
+    environment:
+      OPENWEBUI_MODEL: ${OPENWEBUI_MODEL}
+      OPENWEBUI_PORT: ${OPENWEBUI_PORT}
+    ports:
+      - "${OPENWEBUI_PORT}:8080"  # Map host port to container port 8080
+    volumes:
+      - openwebui-data:/app/backend/data  # Updated volume path for OpenWebUI
+    networks:
+      - ${PROJECT_NAME}-network
+
+  python:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ${PROJECT_NAME}-python
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8888:8888"  # For Jupyter Notebook
+    networks:
+      - ${PROJECT_NAME}-network
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  qdrant-data:
+  neo4j-data:
+  redis-data:
+  kafka-data:
+  openwebui-data:
+
+networks:
+  ai_project1-network:
+    name: ai_project1-network

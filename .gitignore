@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Environment
+.env
+
+# Data
+data/
+models/
+
+# Docker
+**/data/
+**/volumes/
+
+# VS Code
+.vscode/
