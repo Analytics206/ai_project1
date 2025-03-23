@@ -2,6 +2,7 @@
   "name": "Project1 Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "python",
+  "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -11,7 +12,7 @@
         "visualstudioexptteam.vscodeintellicode"
       ],
     "settings": {
-      "python.defaultInterpreterPath": "/usr/local/bin/python",
+      "python.defaultInterpreterPath": "./venv/bin/python",
       "python.linting.enabled": true,
       "python.linting.pylintEnabled": true,
       "python.linting.flake8Enabled": true,
