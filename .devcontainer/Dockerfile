@@ -10,5 +10,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+# Install development tools specified in .devcontainer.json
+RUN pip install --no-cache-dir pylint flake8 black jupyter
+
 # Set up workspace
 WORKDIR /workspace
+
+# Keep container running
+CMD ["sleep", "infinity"]

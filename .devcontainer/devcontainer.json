@@ -1,5 +1,5 @@
 {
-  "name": "${PROJECT_NAME} Dev Container",
+  "name": "Project1 Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "python",
   "workspaceFolder": "/workspace",
@@ -10,10 +10,11 @@
     "visualstudioexptteam.vscodeintellicode"
   ],
   "settings": {
-    "python.pythonPath": "/usr/local/bin/python",
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black"
-  }
+  },
+  "runArgs": ["--env-file", ".env"]
 }
